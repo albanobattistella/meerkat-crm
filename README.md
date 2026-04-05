@@ -39,7 +39,7 @@ You can find the detailed documentation here: [fbuchner.github.io/meerkat-crm/](
     - Keep in touch through reminders and get e-mail notifications
     - See upcoming birthdays
 - Usability
-    - Multiple languages (currently EN and DE)
+    - Multiple languages (currently EN,DE and IT)
     - Light and dark mode
 
 ## Installation
