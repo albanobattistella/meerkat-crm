@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useContacts } from './hooks/useContacts';
 import { getCircles } from './api/contacts';
@@ -223,17 +223,20 @@ export default function ContactsPage() {
             {filteredContacts.map(contact => (
               <Card
                 key={contact.ID}
+                component={Link}
+                to={`/contacts/${contact.ID}`}
                 sx={{
                   display: 'flex',
                   alignItems: 'center',
                   p: 1.5,
                   cursor: 'pointer',
+                  textDecoration: 'none',
+                  color: 'inherit',
                   bgcolor: contact.archived ? 'action.disabledBackground' : undefined,
                   '&:hover': {
                     bgcolor: 'action.hover'
                   }
                 }}
-                onClick={() => navigate(`/contacts/${contact.ID}`)}
               >
                 <Avatar src={contact.photo_thumbnail || undefined} sx={{ width: 48, height: 48, mr: 1.5, bgcolor: 'primary.main' }}>
                   {contact.firstname.charAt(0)}
@@ -260,7 +263,7 @@ export default function ContactsPage() {
                         size="small"
                         variant="outlined"
                         clickable
-                        onClick={(e) => { e.stopPropagation(); setSelectedCircle(circle); setPage(1); }}
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedCircle(circle); setPage(1); }}
                         sx={{ height: 20, fontSize: '0.75rem' }}
                       />
                     ))}
