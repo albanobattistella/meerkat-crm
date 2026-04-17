@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -29,12 +28,10 @@ import AddIcon from '@mui/icons-material/Add';
 import BlockIcon from '@mui/icons-material/Block';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { getApiTokens, createApiToken, revokeApiToken, ApiToken, ApiTokenCreateResponse } from './api/apiTokens';
-import { isAdmin } from './auth';
 import { useSnackbar } from './context/SnackbarContext';
 
 export default function ApiTokensPage() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const { showSuccess, showError } = useSnackbar();
 
   const [tokens, setTokens] = useState<ApiToken[]>([]);
@@ -55,14 +52,6 @@ export default function ApiTokensPage() {
   const [revokingToken, setRevokingToken] = useState<ApiToken | null>(null);
   const [revokeLoading, setRevokeLoading] = useState(false);
 
-  const admin = isAdmin();
-
-  useEffect(() => {
-    if (!admin) {
-      navigate('/');
-    }
-  }, [admin, navigate]);
-
   const fetchTokens = useCallback(async () => {
     setLoading(true);
     setError('');
@@ -77,9 +66,8 @@ export default function ApiTokensPage() {
   }, [t]);
 
   useEffect(() => {
-    if (!admin) return;
     fetchTokens();
-  }, [admin, fetchTokens]);
+  }, [fetchTokens]);
 
   const handleCreate = async () => {
     if (!newTokenName.trim()) return;

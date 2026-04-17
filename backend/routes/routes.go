@@ -135,6 +135,11 @@ func RegisterRoutes(router *gin.Engine, cfg *config.Config, db *gorm.DB, oidcPro
 
 			// Graph/Network visualization route
 			protected.GET("/graph", controllers.GetGraph)
+
+			// API token routes
+			protected.GET("/api-tokens", controllers.ListApiTokens)
+			protected.POST("/api-tokens", middleware.ValidateJSONMiddleware(&models.ApiTokenInput{}), controllers.CreateApiToken)
+			protected.DELETE("/api-tokens/:id", controllers.RevokeApiToken)
 		}
 
 		// Admin routes (admin authentication required)
@@ -150,9 +155,6 @@ func RegisterRoutes(router *gin.Engine, cfg *config.Config, db *gorm.DB, oidcPro
 			admin.POST("/trigger-reminders", func(c *gin.Context) {
 				controllers.TriggerReminders(c, *cfg)
 			})
-			admin.GET("/api-tokens", controllers.ListApiTokens)
-			admin.POST("/api-tokens", middleware.ValidateJSONMiddleware(&models.ApiTokenInput{}), controllers.CreateApiToken)
-			admin.DELETE("/api-tokens/:id", controllers.RevokeApiToken)
 		}
 	}
 
