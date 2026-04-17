@@ -130,10 +130,10 @@ function AppContent({ token, setToken }: { token: string | null; setToken: (toke
   const settingsSubItems = useMemo(() => {
     const items = [
       { text: t('nav.profile'), icon: <SettingsIcon />, path: '/settings' },
+      { text: t('nav.apiTokens'), icon: <TokenIcon />, path: '/api-tokens' },
     ];
     if (userIsAdmin) {
       items.push({ text: t('nav.users'), icon: <PeopleIcon />, path: '/users' });
-      items.push({ text: t('nav.apiTokens'), icon: <TokenIcon />, path: '/api-tokens' });
     }
     return items;
   }, [t, userIsAdmin]);
