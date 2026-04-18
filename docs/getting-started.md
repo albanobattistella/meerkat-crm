@@ -28,9 +28,17 @@ After adjusting the environment variables as needed you can run:
 | `RESEND_API_KEY` | API key for [Resend](https://resend.com), used to send e-mail notifications. The generous free tier is more than enough for any personal setup |
 | `RESEND_FROM_EMAIL` | Sender e-mail address for Resend, needs to be configured in Resend |
 | `CARDDAV_ENABLED` | When set to `true` the application acts as a CardDAV server which allows contacts to be synced with your phone |
+| `DISABLE_REGISTRATION` | When set to `true`, new user registration is disabled (existing users can still log in). Default is `false` |
 | `DATA_PATH` | Host directory where the database file should be stored |
 | `PHOTOS_PATH` | Host directory where the contact photos should be stored |
 | `JWT_EXPIRY_HOURS` | Token expiry, i.e. after how many hours you will need to sign into the application again. Default is 96 hours (4 days) |
+| `OIDC_PROVIDER_URL` | Issuer URL of your OIDC provider (i.e. endpoint URI for your provider). Required to enable SSO |
+| `OIDC_CLIENT_ID` | OAuth2 client ID registered with your OIDC provider |
+| `OIDC_CLIENT_SECRET` | OAuth2 client secret registered with your OIDC provider |
+| `OIDC_AUTO_PROVISION` | When `true`, a new account is automatically created on first SSO login. Default is `false` |
+| `OIDC_TRUST_EMAIL` | When `true`, skips the `email_verified`  requirement when linking an OIDC identity to an existing account by email. Safe to enable for self-hosted providers (e.g. Authentik) where you control all user accounts. Default is `false` |
+
+SSO is disabled unless all three of `OIDC_PROVIDER_URL`, `OIDC_CLIENT_ID`, and `OIDC_CLIENT_SECRET` are set.
 
 Other variables are found in the [sample env file](https://github.com/fbuchner/meerkat-crm/blob/main/.env.docker.example).
 

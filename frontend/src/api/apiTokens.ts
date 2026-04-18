@@ -18,7 +18,7 @@ export interface ApiTokensListResponse {
 }
 
 export async function getApiTokens(): Promise<ApiTokensListResponse> {
-  const response = await apiFetch(`${API_BASE_URL}/admin/api-tokens`, {
+  const response = await apiFetch(`${API_BASE_URL}/api-tokens`, {
     method: 'GET',
     headers: getAuthHeaders(),
   });
@@ -27,7 +27,7 @@ export async function getApiTokens(): Promise<ApiTokensListResponse> {
 }
 
 export async function createApiToken(name: string): Promise<ApiTokenCreateResponse> {
-  const response = await apiFetch(`${API_BASE_URL}/admin/api-tokens`, {
+  const response = await apiFetch(`${API_BASE_URL}/api-tokens`, {
     method: 'POST',
     headers: getAuthHeaders(),
     body: JSON.stringify({ name }),
@@ -37,7 +37,7 @@ export async function createApiToken(name: string): Promise<ApiTokenCreateRespon
 }
 
 export async function revokeApiToken(id: number): Promise<void> {
-  const response = await apiFetch(`${API_BASE_URL}/admin/api-tokens/${id}`, {
+  const response = await apiFetch(`${API_BASE_URL}/api-tokens/${id}`, {
     method: 'DELETE',
     headers: getAuthHeaders(),
   });

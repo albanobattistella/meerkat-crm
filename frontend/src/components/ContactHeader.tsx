@@ -1,4 +1,4 @@
-import { Box, Card, CardContent, Avatar, Typography, Chip, IconButton, Stack, TextField, MenuItem, Button } from '@mui/material';
+import { Box, Card, CardContent, Avatar, Typography, Chip, IconButton, Stack, TextField, Autocomplete, Button } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
 import CloseIcon from '@mui/icons-material/Close';
@@ -308,28 +308,26 @@ export default function ContactHeader({
                     )}
                   </Stack>
                   <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
-                    <TextField
-                      select
-                      label={t('contacts.selectCircle')}
+                    <Autocomplete
+                      key={contact.circles?.length ?? 0}
                       size="small"
-                      value=""
-                      onChange={(e) => {
-                        const value = e.target.value;
+                      options={availableCircles.filter(c => !contact.circles?.includes(c))}
+                      value={null}
+                      onChange={(_, value) => {
                         if (value) {
                           onAddCircle(value);
                         }
                       }}
-                      sx={{ minWidth: 150 }}
-                    >
-                      <MenuItem value="">{t('contacts.selectCircle')}</MenuItem>
-                      {availableCircles
-                        .filter(c => !contact.circles?.includes(c))
-                        .map(circle => (
-                          <MenuItem key={circle} value={circle}>
-                            {circle}
-                          </MenuItem>
-                        ))}
-                    </TextField>
+                      blurOnSelect
+                      sx={{ minWidth: 200 }}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          label={t('contacts.selectCircle')}
+                          size="small"
+                        />
+                      )}
+                    />
                     <TextField
                       size="small"
                       placeholder={t('contactDetail.newCircle')}

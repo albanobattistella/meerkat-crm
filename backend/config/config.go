@@ -11,25 +11,38 @@ import (
 	"strings"
 )
 
+// OIDCConfig holds optional OIDC provider settings.
+type OIDCConfig struct {
+	Enabled            bool
+	ProviderURL        string
+	ClientID           string
+	ClientSecret       string
+	RedirectURL        string // derived from FrontendURL, not configurable
+	AllowAutoProvision bool
+	TrustEmail         bool // skip email_verified requirement when linking accounts (for trusted self-hosted providers)
+}
+
 type Config struct {
-	DBPath          string
-	ReminderTime    string
-	FrontendURL     string
-	Port            string
-	TrustedProxies  []string
-	UseResend       bool
-	ResendAPIKey    string
-	ResendFromEmail string
-	ResendToEmail   string
-	JWTSecretKey    string
-	JWTExpiryHours  int
-	ReadTimeout     int    // HTTP server read timeout in seconds
-	WriteTimeout    int    // HTTP server write timeout in seconds
-	IdleTimeout     int    // HTTP server idle timeout in seconds
-	ProfilePhotoDir string // Directory for storing profile photos (must be absolute path)
-	CardDAVEnabled  bool   // Enable CardDAV server for contact sync
-	CookieSecure    bool   // Set Secure flag on auth cookie (requires HTTPS)
-	CookieDomain    string // Domain for auth cookie (empty = current domain only)
+	DBPath               string
+	ReminderTime         string
+	FrontendURL          string
+	Port                 string
+	TrustedProxies       []string
+	UseResend            bool
+	ResendAPIKey         string
+	ResendFromEmail      string
+	ResendToEmail        string
+	JWTSecretKey         string
+	JWTExpiryHours       int
+	ReadTimeout          int    // HTTP server read timeout in seconds
+	WriteTimeout         int    // HTTP server write timeout in seconds
+	IdleTimeout          int    // HTTP server idle timeout in seconds
+	ProfilePhotoDir      string // Directory for storing profile photos (must be absolute path)
+	CardDAVEnabled       bool   // Enable CardDAV server for contact sync
+	CookieSecure         bool   // Set Secure flag on auth cookie (requires HTTPS)
+	CookieDomain         string // Domain for auth cookie (empty = current domain only)
+	RegistrationDisabled bool   // Disable new user registration
+	OIDC                 OIDCConfig
 }
 
 func LoadConfig() *Config {
@@ -47,27 +60,41 @@ func LoadConfig() *Config {
 	idleTimeout := getIntEnv("HTTP_IDLE_TIMEOUT", 60)
 
 	cfg := &Config{
-		DBPath:          getEnv("SQLITE_DB_PATH", "meerkat.db"),
-		ReminderTime:    getEnv("REMINDER_TIME", "12:00"),
-		FrontendURL:     getEnv("FRONTEND_URL", "*"),
-		Port:            getEnv("PORT", "8080"),
-		UseResend:       true,
-		ResendAPIKey:    getEnv("RESEND_API_KEY", ""),
-		ResendFromEmail: getEnv("RESEND_FROM_EMAIL", ""),
-		JWTSecretKey:    getEnv("JWT_SECRET_KEY", ""),
-		JWTExpiryHours:  jwtExpiryHours,
-		TrustedProxies:  getProxies(getEnv("TRUSTED_PROXIES", "")),
-		ReadTimeout:     readTimeout,
-		WriteTimeout:    writeTimeout,
-		IdleTimeout:     idleTimeout,
-		ProfilePhotoDir: getEnv("PROFILE_PHOTO_DIR", ""),
-		CardDAVEnabled:  getBoolEnv("CARDDAV_ENABLED", false),
-		CookieSecure:    getBoolEnv("COOKIE_SECURE", false),
-		CookieDomain:    getEnv("COOKIE_DOMAIN", ""),
+		DBPath:               getEnv("SQLITE_DB_PATH", "meerkat.db"),
+		ReminderTime:         getEnv("REMINDER_TIME", "12:00"),
+		FrontendURL:          getEnv("FRONTEND_URL", "*"),
+		Port:                 getEnv("PORT", "8080"),
+		UseResend:            true,
+		ResendAPIKey:         getEnv("RESEND_API_KEY", ""),
+		ResendFromEmail:      getEnv("RESEND_FROM_EMAIL", ""),
+		JWTSecretKey:         getEnv("JWT_SECRET_KEY", ""),
+		JWTExpiryHours:       jwtExpiryHours,
+		TrustedProxies:       getProxies(getEnv("TRUSTED_PROXIES", "")),
+		ReadTimeout:          readTimeout,
+		WriteTimeout:         writeTimeout,
+		IdleTimeout:          idleTimeout,
+		ProfilePhotoDir:      getEnv("PROFILE_PHOTO_DIR", ""),
+		CardDAVEnabled:       getBoolEnv("CARDDAV_ENABLED", false),
+		CookieSecure:         getBoolEnv("COOKIE_SECURE", false),
+		CookieDomain:         getEnv("COOKIE_DOMAIN", ""),
+		RegistrationDisabled: getBoolEnv("DISABLE_REGISTRATION", false),
 	}
 
 	if cfg.ResendAPIKey == "" || cfg.ResendFromEmail == "" {
 		cfg.UseResend = false
+	}
+
+	oidcProviderURL := getEnv("OIDC_PROVIDER_URL", "")
+	oidcClientID := getEnv("OIDC_CLIENT_ID", "")
+	oidcClientSecret := getEnv("OIDC_CLIENT_SECRET", "")
+	cfg.OIDC = OIDCConfig{
+		Enabled:            oidcProviderURL != "" && oidcClientID != "" && oidcClientSecret != "",
+		ProviderURL:        oidcProviderURL,
+		ClientID:           oidcClientID,
+		ClientSecret:       oidcClientSecret,
+		RedirectURL:        cfg.FrontendURL + "/api/v1/auth/oidc/callback",
+		AllowAutoProvision: getBoolEnv("OIDC_AUTO_PROVISION", false),
+		TrustEmail:         getBoolEnv("OIDC_TRUST_EMAIL", false),
 	}
 
 	return cfg
@@ -242,6 +269,18 @@ func (c *Config) Validate() []ValidationError {
 			Field:   "TRUSTED_PROXIES",
 			Message: fmt.Sprintf("Invalid proxy '%s'. Must be a valid IP address or CIDR notation.", proxy),
 		})
+	}
+
+	// Warn if OIDC is partially configured (some vars set but not all required ones)
+	oidcVars := []string{c.OIDC.ProviderURL, c.OIDC.ClientID, c.OIDC.ClientSecret}
+	oidcSet := 0
+	for _, v := range oidcVars {
+		if v != "" {
+			oidcSet++
+		}
+	}
+	if oidcSet > 0 && oidcSet < 3 {
+		log.Println("WARN: OIDC is partially configured. Set OIDC_PROVIDER_URL, OIDC_CLIENT_ID, and OIDC_CLIENT_SECRET to enable SSO.")
 	}
 
 	// Validate Resend configuration if emails are enabled
